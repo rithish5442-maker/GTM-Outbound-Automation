@@ -1,0 +1,697 @@
+{
+  "name": "outbound prospecting",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -528
+      ],
+      "id": "2781c6d0-40e5-4aa3-af2b-5b09d7f60c28",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -272
+      ],
+      "id": "7e7e76bd-9632-410d-9b72-6f5b7f9cc05f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.prospeo.io/search-person",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-KEY",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"page\": 1,\n  \"filters\": {\n    \"company\": {\n      \"company_oids\": {\n        \"include\": [\n          \"{{ $json.company_id }}\"\n        ]\n      }\n    },\n    \"person_job_title\": {\n      \"include\": [\n        \"Founder\",\n        \"Co-Founder\",\n        \"Owner\",\n        \"CEO\",\n        \"Chief Executive Officer\",\n        \"Managing Director\",\n        \"President\"\n      ],\n      \"match_mode\": \"CONTAINS\"\n    }\n  }\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        -272
+      ],
+      "id": "a7d068b6-a305-47f6-a07c-c3c2a9368f9b",
+      "name": "search person",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.prospeo.io/enrich-person",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-KEY",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"person_id\": \"{{ $json.person.person_id }}\"\n  }\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 5000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        624,
+        -272
+      ],
+      "id": "2de23d32-0c94-4386-9e80-2c16d442a752",
+      "name": "enrich person"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.prospeo.io/search-company",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-KEY",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"page\": 1,\n  \"filters\": {\n    \"company_location_search\": {\n      \"include\": [\n        \"India\"\n      ]\n    },\n    \"company_headcount_range\": [\n      \"11-20\",\n      \"21-50\"\n    ],\n    \"company_headcount_growth\": {\n      \"timeframe_month\": 12,\n      \"min\": 10,\n      \"max\": 100\n    },\n    \"company_industry\": {\n      \"include\": [\n        \"Software Development\",\n        \"Data Security Software Products\",\n        \"Financial Services\",\n        \"IT Services and IT Consulting\",\n        \"Business Consulting and Services\",\n        \"Computer and Network Security\",\n        \"Technology, Information and Internet\",\n        \"Human Resources Services\",\n        \"Advertising Services\"\n      ]\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -640,
+        -160
+      ],
+      "id": "0a38aab2-1a6e-4728-858a-952ce326ee07",
+      "name": "search company"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.exa.ai/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"Research {{ $json.company.name}} as a potential B2B GTM prospect in India. Find recent credible public information about this company, prioritizing the last 12 months. Identify evidence of job changes, promotions, departures, important new hires, leadership changes or leadership-change intent, recent funding, aggressive hiring, rapid growth, company expansion, technology or system changes, new business lanes, website or product intent, customer sentiment, and significant negative issues or customer complaints. Focus especially on Marketing, Sales, Revenue, RevOps, Growth, and GTM. For every relevant finding, identify what happened, the person or company involved, role if applicable, date, why it matters for GTM, source URL, and supporting evidence. Do not assume a signal exists when evidence is unavailable. Distinguish confirmed evidence from weak or unavailable evidence.\",\n  \"type\": \"auto\",\n  \"numResults\": 10,\n  \"contents\": {\n    \"highlights\": true\n  }\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 10,
+              "batchInterval": 10000
+            }
+          },
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -288,
+        -256
+      ],
+      "id": "b5dfec8c-b9c4-4cb5-82d7-d440570d31a8",
+      "name": "exa search",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -160
+      ],
+      "id": "7b3593ab-0dcf-4286-b671-000464f9e409",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const input = item.json;\n\n  const results = input.results || [];\n  const entities = input.entities || [];\n\n  // ---------------------------------------------------------\n  // ORIGINAL COMPANY DATA FROM MERGE\n  // ---------------------------------------------------------\n\n  const originalCompany =\n    input.company || {};\n\n  // Original company name from Prospeo/Search Company\n  const originalCompanyName =\n    originalCompany.name || null;\n\n  // Original company domain from Prospeo/Search Company\n  const originalCompanyDomain =\n    originalCompany.domain || null;\n\n  // ---------------------------------------------------------\n  // EXA COMPANY ENTITY\n  // ---------------------------------------------------------\n\n  const companyEntity = entities.find(\n    entity => entity.type === \"company\"\n  );\n\n  const properties = companyEntity?.properties || {};\n\n  // IMPORTANT:\n  // Always prefer the original company name.\n  // Never use result.author as a company name.\n  const companyName =\n    originalCompanyName ||\n    properties.name ||\n    null;\n\n  const companyDomain =\n    originalCompanyDomain ||\n    null;\n\n  const companyDescription =\n    properties.description || \"\";\n\n  const workforce =\n    companyEntity?.workforce?.total ?? null;\n\n  const country =\n    companyEntity?.headquarters?.country || null;\n\n  // ---------------------------------------------------------\n  // COMBINE EXA EVIDENCE\n  // ---------------------------------------------------------\n\n  const evidenceText = results\n    .map(result => {\n      return [\n        result.title || \"\",\n        ...(result.highlights || [])\n      ].join(\" \");\n    })\n    .join(\" \")\n    .toLowerCase();\n\n  const descriptionText =\n    companyDescription.toLowerCase();\n\n  const allText =\n    `${evidenceText} ${descriptionText}`;\n\n  // ---------------------------------------------------------\n  // SIGNAL SCORING FUNCTION\n  // ---------------------------------------------------------\n\n  function signalScore(patterns, strongPatterns = []) {\n    const strongMatch = strongPatterns.some(pattern =>\n      pattern.test(allText)\n    );\n\n    if (strongMatch) return 3;\n\n    const matches = patterns.filter(pattern =>\n      pattern.test(allText)\n    ).length;\n\n    if (matches >= 2) return 2;\n    if (matches === 1) return 1;\n\n    return 0;\n  }\n\n  // ---------------------------------------------------------\n  // B2B FIT\n  // ---------------------------------------------------------\n\n  let b2bFit = 0;\n\n  if (\n    /business(es)?|enterprise|organizations?|clients?|companies?|b2b|business customers/i.test(\n      allText\n    )\n  ) {\n    b2bFit = 2;\n  }\n\n  if (\n    /enterprise solutions|business solutions|business customers|b2b|serves organizations/i.test(\n      allText\n    )\n  ) {\n    b2bFit = 3;\n  }\n\n  // ---------------------------------------------------------\n  // FUNDING\n  // ---------------------------------------------------------\n\n  const funding = signalScore(\n    [\n      /funding/i,\n      /raised/i,\n      /investment/i,\n      /investor/i,\n      /seed round/i,\n      /series [a-z]/i\n    ],\n    [\n      /recently raised/i,\n      /latest funding/i,\n      /funding round/i,\n      /series [a-z].{0,30}(million|funding|raised)/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // HIRING\n  // ---------------------------------------------------------\n\n  const hiring = signalScore(\n    [\n      /we('re| are) hiring/i,\n      /hiring/i,\n      /open positions/i,\n      /job postings/i,\n      /new joiner/i,\n      /joined us/i\n    ],\n    [\n      /active job postings:\\s*[1-9]/i,\n      /aggressive hiring/i,\n      /rapid hiring/i,\n      /multiple.*open positions/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // JOB CHANGES / NEW HIRES / PROMOTIONS\n  // ---------------------------------------------------------\n\n  const jobChanges = signalScore(\n    [\n      /joined us/i,\n      /new joiner/i,\n      /new hire/i,\n      /promoted/i,\n      /promotion/i,\n      /appointed/i,\n      /departed/i,\n      /left the company/i\n    ],\n    [\n      /senior.*joined/i,\n      /executive.*joined/i,\n      /promoted to/i,\n      /appointed as/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // LEADERSHIP\n  // ---------------------------------------------------------\n\n  const leadership = signalScore(\n    [\n      /ceo/i,\n      /coo/i,\n      /cmo/i,\n      /cto/i,\n      /chief executive/i,\n      /chief operating/i,\n      /vp marketing/i,\n      /head of growth/i,\n      /head of marketing/i,\n      /leadership/i\n    ],\n    [\n      /new ceo/i,\n      /new coo/i,\n      /new cmo/i,\n      /new cto/i,\n      /vp marketing/i,\n      /head of growth/i,\n      /appointed.*chief/i,\n      /hiring.*vp/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // RAPID GROWTH\n  // ---------------------------------------------------------\n\n  const rapidGrowth = signalScore(\n    [\n      /growth/i,\n      /growing/i,\n      /grew/i,\n      /expanded/i,\n      /expansion/i,\n      /employee.*growth/i,\n      /workforce.*growth/i\n    ],\n    [\n      /\\+\\d+(?:\\.\\d+)?%.*yoy/i,\n      /rapidly growing/i,\n      /fast-growing/i,\n      /significant growth/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // EXPANSION\n  // ---------------------------------------------------------\n\n  const expansion = signalScore(\n    [\n      /expanded/i,\n      /expansion/i,\n      /new market/i,\n      /new location/i,\n      /new office/i,\n      /global presence/i,\n      /international/i\n    ],\n    [\n      /expanded.*market/i,\n      /entered.*market/i,\n      /new office/i,\n      /presence in.*countries/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // TECHNOLOGY / SYSTEM CHANGE\n  // ---------------------------------------------------------\n\n  const technologyChange = signalScore(\n    [\n      /technology/i,\n      /software/i,\n      /platform/i,\n      /automation/i,\n      /ai-assisted/i,\n      /ai/i,\n      /crm/i,\n      /hrms/i,\n      /tech stack/i\n    ],\n    [\n      /adopted.*technology/i,\n      /implemented.*system/i,\n      /new.*platform/i,\n      /ai-assisted/i,\n      /automation/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // NEW BUSINESS LANE\n  // ---------------------------------------------------------\n\n  const newBusinessLane = signalScore(\n    [\n      /new service/i,\n      /new product/i,\n      /new business/i,\n      /new offering/i,\n      /digital transformation/i,\n      /software development/i,\n      /business expansion/i\n    ],\n    [\n      /launch(ed|ing).*product/i,\n      /launch(ed|ing).*service/i,\n      /new business line/i,\n      /expanded.*services/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // WEBSITE / PRODUCT INTENT\n  // ---------------------------------------------------------\n\n  const websiteProductIntent = signalScore(\n    [\n      /product/i,\n      /platform/i,\n      /solution/i,\n      /services/i,\n      /digital/i,\n      /technology/i\n    ],\n    [\n      /launch(ed|ing).*product/i,\n      /new.*platform/i,\n      /new.*solution/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // CUSTOMER SENTIMENT\n  // ---------------------------------------------------------\n\n  const customerSentiment = signalScore(\n    [\n      /customer reviews/i,\n      /client feedback/i,\n      /testimonials/i,\n      /customer satisfaction/i,\n      /rated/i,\n      /reviews/i\n    ],\n    [\n      /positive customer/i,\n      /excellent reviews/i,\n      /highly rated/i,\n      /5 out of 5/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // NEGATIVE ISSUES\n  // ---------------------------------------------------------\n\n  const negativeIssues = signalScore(\n    [\n      /complaint/i,\n      /negative review/i,\n      /poor review/i,\n      /issue/i,\n      /problem/i,\n      /concern/i,\n      /negative feedback/i\n    ],\n    [\n      /customer complaints/i,\n      /repeated complaints/i,\n      /serious issue/i,\n      /negative customer feedback/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // COMPANY NEWS\n  // ---------------------------------------------------------\n\n  const companyNews = signalScore(\n    [\n      /announced/i,\n      /announcement/i,\n      /news/i,\n      /conference/i,\n      /event/i,\n      /partnership/i,\n      /networking/i\n    ]\n  );\n\n  // ---------------------------------------------------------\n  // WEIGHTS\n  // ---------------------------------------------------------\n\n  const weights = {\n    b2bFit: 15,\n    funding: 15,\n    hiring: 15,\n    jobChanges: 10,\n    leadership: 12,\n    rapidGrowth: 12,\n    expansion: 7,\n    technologyChange: 5,\n    newBusinessLane: 5,\n    websiteProductIntent: 3,\n    customerSentiment: 1,\n    negativeIssues: 0,\n    companyNews: 0\n  };\n\n  // ---------------------------------------------------------\n  // SCORES\n  // ---------------------------------------------------------\n\n  const scores = {\n    b2bFit,\n    funding,\n    hiring,\n    jobChanges,\n    leadership,\n    rapidGrowth,\n    expansion,\n    technologyChange,\n    newBusinessLane,\n    websiteProductIntent,\n    customerSentiment,\n    negativeIssues,\n    companyNews\n  };\n\n  // ---------------------------------------------------------\n  // WEIGHTED TOTAL\n  // ---------------------------------------------------------\n\n  let weightedTotal = 0;\n  let maximumPossible = 0;\n\n  for (const key of Object.keys(weights)) {\n    weightedTotal +=\n      (scores[key] / 3) * weights[key];\n\n    maximumPossible += weights[key];\n  }\n\n  const overallScore = Math.round(\n    (weightedTotal / maximumPossible) * 100\n  );\n\n  // ---------------------------------------------------------\n  // FINAL OUTPUT\n  // ---------------------------------------------------------\n\n return {\n  json: {\n    company_id: originalCompany.company_id || null,\n    company_name: companyName,\n    company_domain: companyDomain,\n    linkedin_url: originalCompany.linkedin_url || null,\n    company_country: country,\n    workforce,\n\n    signals: scores,\n\n    overall_score: overallScore,\n\n    evidence: results.map(result => ({\n      title: result.title || null,\n      url: result.url || null,\n      publishedDate: result.publishedDate || null,\n      highlights: result.highlights || []\n    }))\n  }\n};\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -160
+      ],
+      "id": "9dca377f-835e-4938-bd23-b2982c956c36",
+      "name": "signal scoring"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fd41a133-9945-4984-8c71-402eeb255dd9",
+              "leftValue": "={{ $json.overall_score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        -160
+      ],
+      "id": "117d8337-6cce-4943-869d-67d940321020",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "f5c6a25d-bfe0-40b6-a85f-85df05bac087",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.exa.ai/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"Find the current Founder, Co-Founder, Owner, CEO, Chief Executive Officer, Managing Director, or President of {{ $json.company_name }}. Company LinkedIn page: {{ $json.linkedin_url }}. Return their full name, current job title, and personal LinkedIn profile URL. Only return people who currently work at this company. Do not invent information.\",\n  \"numResults\": 5,\n  \"type\": \"auto\",\n  \"includeDomains\": [\n    \"linkedin.com\"\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 10,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        -48
+      ],
+      "id": "ace2a608-6e6a-4db4-b060-1039bded269c",
+      "name": "exa people search",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -48
+      ],
+      "id": "13200f36-4c78-499d-b5a6-5fac5fe34100",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\n\nfor (const item of $input.all()) {\n  const r = item.json;\n\n  const url = r.url || '';\n\n  // Keep only personal LinkedIn profiles\n  if (!url.includes('linkedin.com/in/')) {\n    continue;\n  }\n\n  output.push({\n    json: {\n      person_name: r.title || null,\n      linkedin_url: url\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "44b0b019-8b10-4409-b5a8-5ab28cb7da27",
+      "name": "clean exa people"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.prospeo.io/enrich-person",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-KEY",
+              "value": ""
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"linkedin_url\": \"{{ $json.linkedin_url}}\"\n  }\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        -48
+      ],
+      "id": "59eda406-dd0a-44f1-8ebc-010f1ef80ced",
+      "name": "enrich person1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        992,
+        -160
+      ],
+      "id": "103c2e47-a86a-4a82-afa5-fd15ba4b65c1",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const seen = new Set();\nconst output = [];\n\nfor (const item of $input.all()) {\n  const data = item.json;\n  const person = data.person || {};\n\n  const linkedin = String(\n    person.linkedin_url || data.linkedin_url || ''\n  )\n    .trim()\n    .toLowerCase()\n    .replace(/\\/$/, '');\n\n  const email = String(\n    person.email || data.email || ''\n  )\n    .trim()\n    .toLowerCase();\n\n  const name = String(\n    person.full_name || data.person_name || ''\n  )\n    .trim()\n    .toLowerCase();\n\n  const company = String(\n    data.company?.company_name ||\n    data.company?.name ||\n    data.company_name ||\n    ''\n  )\n    .trim()\n    .toLowerCase();\n\n  let key;\n\n  if (linkedin) {\n    key = `linkedin:${linkedin}`;\n  } else if (email) {\n    key = `email:${email}`;\n  } else if (name && company) {\n    key = `name_company:${name}|${company}`;\n  } else {\n    key = `unique:${output.length}`;\n  }\n\n  if (seen.has(key)) {\n    continue;\n  }\n\n  seen.add(key);\n  output.push(item);\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -160
+      ],
+      "id": "b6473b44-a4f6-4ee0-8530-9dc95047eca3",
+      "name": "deduplicate prospects"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $json.person.email.email }}",
+        "additionalFields": {
+          "firstName": "={{ $json.person.first_name }}",
+          "jobTitle": "={{ $json.person.current_job_title }}",
+          "lastName": "={{ $json.person.last_name }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1536,
+        -176
+      ],
+      "id": "be0c1cec-4043-404e-aa7e-e5f5037eef5f",
+      "name": "Create or update a contact",
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "KjQ3n4jFHkprdY7N",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0C1GJP7JAY",
+          "mode": "list",
+          "cachedResultName": "all-outbound-practice"
+        },
+        "text": "=🎯 New Prospect Added\n\nName: {{ $('deduplicate prospects').item.json.person.full_name }}\nCompany: {{ $('deduplicate prospects').item.json.company.company_name }}\nTitle: {{ $('deduplicate prospects').item.json.person.current_job_title }}\nEmail: {{ $('deduplicate prospects').item.json.person.email.email }}\nLinkedIn: {{ $('deduplicate prospects').item.json.person.linkedin_url }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1744,
+        -224
+      ],
+      "id": "613b0a80-76e3-47da-a51b-d1b0e490126e",
+      "name": "Send a message",
+      "webhookId": "9a77492b-abdc-4eef-9acd-96a53b5e4b9a",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "h8OgqEhZetYo2pQs",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "11a356d0-6b9e-4d41-a1e7-88ac9a8d0c37",
+              "leftValue": "={{ $json.person.email.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -160
+      ],
+      "id": "7ece42db-fab7-495c-8aab-5e0c9029cba2",
+      "name": "If1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "search company",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "enrich person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search person": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search company": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "exa search": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "exa search",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "signal scoring": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "search person",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "exa people search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "signal scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "exa people search": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "clean exa people",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clean exa people": {
+      "main": [
+        [
+          {
+            "node": "enrich person1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enrich person": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enrich person1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "deduplicate prospects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deduplicate prospects": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a contact": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Create or update a contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "98e0c4a1-ac70-4bff-a04a-f15b367b943d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b69013b6c9f097973e53b38b930b13e85c88f5b50ca640f34639a7e2ca8784da"
+  },
+  "nodeGroups": [],
+  "id": "d4HsZvCIEO6iVcJL",
+  "tags": []
+}
